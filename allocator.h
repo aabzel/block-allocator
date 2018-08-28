@@ -7,11 +7,6 @@
 #define SIZE_OF_BLOCK 1
 #define SIZE_OF_POOL 10
 
-enum alloc_access {
-	ALLOCATE_UNLOCK = 0,
-	ALLOCATE_LOCK = 1
-};
-
 enum alloc_error_codes {
 	ALLOC_OK = 0,
 	ALLOC_ERR_INPUT = 1,
