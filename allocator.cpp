@@ -8,25 +8,17 @@
 #include <stdio.h>
 #include <string.h>
 
-//This is a simple semaphore for multithreating access
-static int s_allocator_lock = ALLOCATE_UNLOCK;
-
 //This is a raw pool. The main memory of the system
 static tBlock sBlock[SIZE_OF_POOL];
 //This is an array of status of each block in pool 
 static tPoolStatus sPool[SIZE_OF_POOL];
 
 int init_allocator() {
-	if (ALLOCATE_LOCK == s_allocator_lock  ){
-		return ALLOC_BUSY;
-	}
-	s_allocator_lock = ALLOCATE_LOCK;
 	for(int i=0; i<SIZE_OF_POOL; i++) {
 		sPool[i].blockType = EMPTY_BLOCK;
 		sPool[i].amountOfSiblingBlocks=0;
 		memset(&sBlock[i], 0x00, sizeof(sBlock[i]));
 	}
-	s_allocator_lock=ALLOCATE_UNLOCK;
 	return ALLOC_OK;
 }
 
@@ -62,20 +54,15 @@ static int is_block_exist(tBlock *inblock, int *outBlockIndex) {
 }
 
 int allocate_memory_for_blocks(tBlock **outBlock, int ammountOfBlocksToAlloc) {
-	if (ALLOCATE_LOCK == s_allocator_lock ) {
-		return ALLOC_BUSY;
-	}
 
-	s_allocator_lock = ALLOCATE_LOCK;
+
 	if (!ammountOfBlocksToAlloc) {
-		s_allocator_lock = ALLOCATE_UNLOCK;
 		return ALLOC_ERR_INPUT;
 	}
 	// Check up whether or not such a block in a pool.
 	int outBlockIndex;
 	if ( is_block_exist(*outBlock, &outBlockIndex) ) {
 		//such a block already exists in the pool
-		s_allocator_lock = ALLOCATE_UNLOCK;
 		return ALLOC_ERR_BLOCK_EXISTS;
 	}
 	int firstBlockForSetBlocks = -1;
@@ -94,7 +81,6 @@ int allocate_memory_for_blocks(tBlock **outBlock, int ammountOfBlocksToAlloc) {
 				occupy_blocks(firstBlockForSetBlocks, ammountOfBlocksToAlloc);
 				*outBlock = &sBlock[firstBlockForSetBlocks];
 
-				s_allocator_lock = ALLOCATE_UNLOCK;
 				return ALLOC_OK;
 			}
 		} else if ( 0 < sPool[i].amountOfSiblingBlocks ) {
@@ -105,23 +91,16 @@ int allocate_memory_for_blocks(tBlock **outBlock, int ammountOfBlocksToAlloc) {
 	}
 	outBlock = NULL;
 
-	s_allocator_lock = ALLOCATE_UNLOCK;
 	return ALLOC_ERR_LACK_OF_SPACE;
 }
 
 int free_memory_from_pool(tBlock *inBlock) {
-	if (ALLOCATE_LOCK == s_allocator_lock  ){
-		return ALLOC_BUSY;
-	}
-	s_allocator_lock = ALLOCATE_LOCK;
 	if (NULL==inBlock){
-		s_allocator_lock = ALLOCATE_UNLOCK;
 		return FREE_ERR_INPUT_ERROR;
 	}
 	// run through the entire pool and find the block with the address as inblock
 	int	desiredBlockIndex=-1;
 	if (!is_block_exist(inBlock, &desiredBlockIndex)) {
-		s_allocator_lock = ALLOCATE_UNLOCK;
 	    return FREE_ERROR_NOT_FOUND;
 	} 
 
@@ -129,13 +108,10 @@ int free_memory_from_pool(tBlock *inBlock) {
        (FIRST_BLOCK_IN_CHAIN==sPool[desiredBlockIndex].blockType) ) {
         release_blocks(desiredBlockIndex, sPool[desiredBlockIndex].amountOfSiblingBlocks);
 		inBlock = NULL;
-		s_allocator_lock = ALLOCATE_UNLOCK;
 	    return FREE_OK;
 	} else {
-		s_allocator_lock = ALLOCATE_UNLOCK;
 		return FREE_ERROR_UNAEBLE_TO_DELETE_TRAILING_BLOCK;
 	}
-	s_allocator_lock = ALLOCATE_UNLOCK;
 	return FREE_ERROR_UNKNOWN;
 }
 
