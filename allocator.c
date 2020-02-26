@@ -21,12 +21,7 @@ static uint32_t count_amount_of_continuously_spare_blocks (uint32_t * const outI
 static uint8_t is_block_exist (tBlock_t * const inblock, int32_t * const outBlockIndex);
 static void release_blocks (uint32_t firstBlockForSetBlocks, uint32_t ammountOfBlocksToRelease);
 static void occupy_blocks (uint32_t firstBlockForSetBlocks, uint32_t ammountOfBlocksToAlloc);
-
-void print_block_address (void) {
-    for (int i = 0; i < SIZE_OF_POOL; i++) {
-        printf ("\naddress block[%d]:%p", i, &sBlock [i]);
-    }
-}
+static void print_block_address (void);
 
 void init_allocator (void) {
     for (int i = 0; i < SIZE_OF_POOL; i++) {
@@ -40,7 +35,7 @@ void init_allocator (void) {
     printf ("\n numOfBlock %d firstBlock %d\n ", numOfBlock, firstBlock);
 #endif
 }
-/*TODO make one point of return */
+
 alloc_error_codes_t allocate_memory_for_blocks (tBlock_t **outBlock, uint32_t ammountOfBlocksToAlloc) {
     disable_interrupts ();
 
@@ -326,5 +321,11 @@ static void get_list_of_spare_regions (void) {
         }
     }
     printf ("] ");
+}
 
+/*For debug*/
+static void print_block_address (void) {
+    for (int i = 0; i < SIZE_OF_POOL; i++) {
+        printf ("\naddress block[%d]:%p", i, &sBlock [i]);
+    }
 }
